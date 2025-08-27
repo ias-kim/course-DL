@@ -1,0 +1,69 @@
+# -----------------------
+# Python 관련
+# -----------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+*.log
+
+# 가상환경 / 패키지
+.venv/
+env/
+venv/
+ENV/
+.ipynb_checkpoints/
+
+# -----------------------
+# Jupyter Notebook
+# -----------------------
+*.ipynb_checkpoints
+.notebook/
+
+# -----------------------
+# 데이터
+# -----------------------
+data/raw/
+data/processed/
+!data/.gitkeep
+
+# -----------------------
+# 학습 결과 / 모델
+# -----------------------
+runs/
+checkpoints/
+*.pt
+*.pth
+*.onnx
+
+# -----------------------
+# VSCode / Dev Container
+# -----------------------
+.vscode/
+.devcontainer/.cache/
+.history/
+
+# -----------------------
+# Docker
+# -----------------------
+*.pid
+*.seed
+*.pid.lock
+
+
+# ---------------------------
+# OS 자동 생성 파일
+# ---------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------------------------
+# 로그 / 임시파일
+# ---------------------------
+*.log
+*.tmp
+*.swp
+*.swo
