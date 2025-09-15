@@ -1,115 +1,166 @@
 import torch
 
+# ------------------------------------------------------------
+# 0) 환경/버전/디바이스 정보
+# ------------------------------------------------------------
+print("PyTorch version:", torch.__version__)
+print("CUDA available:", torch.cuda.is_available())
+if torch.cuda.is_available():
+    print("CUDA device count:", torch.cuda.device_count())
+    cur = torch.cuda.current_device()
+    print(f"Current device ID: {cur}, name: {torch.cuda.get_device_name(cur)}")
+else:
+    print("-> GPU 미사용: CPU로 실행합니다.")
 
-# tensor : PyTorch에서 데이터를 저장하는 기본 자료형
-# - 구조(차원) : Scholar, Vector, Matrix, N-dimentional Matrix
-# - 자료형 : 
-#   . 텐서 내 모든 데이터의 자료형은 동일해야 한다.
-#   . 텐서 내 모든 차원은 정방 격자 구조를 유지 (regular n-dimentional array)
- 
+# 재현성(데모용): 완전 재현은 CUDNN 설정까지 필요
+torch.manual_seed(0)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed_all(0)
+
+# ------------------------------------------------------------
 # 1) 텐서의 핵심 속성
-#  shape / ndim: 차원과 크기 x.shape, x.ndim
-#  dtype: 자료형(연산·정밀도·메모리 영향) x.dtype
-#  device: CPU/GPU 위치 x.device (.to("cuda"), .cuda(), .cpu())
+#    - 구조(차원): Scalar, Vector, Matrix, N-dimensional Tensor
+#    - 자료형(dtype): 텐서 내 모든 원소 동일
+#    - 메모리 레이아웃: 정방 격자(regular n-D array)
+# ------------------------------------------------------------
+x = torch.tensor(((1, 2), (3, 4)))   # 기본 int64 텐서 (정수 리터럴이므로)
+print("\n[1] 기본 텐서 속성")
+print("x =", x)
+print("shape:", x.shape)     # torch.Size([2,2])
+print("ndim :", x.ndim)      # 2
+print("device:", x.device)   # cpu 또는 cuda:0
+print("dtype :", x.dtype)    # torch.int64 (기본)
+print("numel :", x.numel())  # 총 원소 수
 
-x = torch.tensor( ((1, 2), (3, 4)))
-print(x.shape)
-print(x.ndim)
-print(x.device)
-print(x.dtype)
-print(x.numel())
+# float로 만들고 싶으면 dtype 지정 or 부동소수 리터럴 사용
+xf = torch.tensor(((1.0, 2.0), (3.0, 4.0)), dtype=torch.float32)
+print("xf dtype:", xf.dtype)  # torch.float32
 
-# 2) 생성 
-# 기본 생성
-#  - 직접/난수/범위: tensor, zeros/ones/full, rand/randn, arange/linspace
-#  - 직접 입력 값 : 스칼라, 튜플/리스트, 넘파이
-#  - 형태 지정 : 
+# ------------------------------------------------------------
+# 2) 생성 함수 모음
+#    - 직접/난수/범위 생성
+# ------------------------------------------------------------
+print("\n[2] 생성 함수")
+y0 = torch.zeros(10)                 # [10], float32 기본
+y1 = torch.ones(10)                  # [10]
+yf = torch.full((2, 5), 7)           # [2,5], 값 7 (int64)
+ru = torch.rand(3, 4)                # [3,4], U(0,1)
+rn = torch.randn(2, 3)               # [2,3], N(0,1)
+ri = torch.randint(0, 10, (2, 3, 3)) # [2,3,3], 0~9
 
-y0 = torch.zeros(10)
-y1 = torch.ones(10)
-yf = torch.full((2, 5), 7)
+print("zeros :", y0)
+print("ones  :", y1)
+print("full  :", yf)
+print("rand  :\n", ru)
+print("randn :\n", rn)
+print("randint:\n", ri)
 
-print(y0)  
-print(y1)  
-print(yf)
-
-
-ru = torch.rand(3, 4)
-rn = torch.randn(2, 3)
-ri = torch.randint(0, 10, (2, 3, 3))
-
-print(ru)
-print(rn)  
-print(ri)
-
-# 크기/속성 따라하기: zeros_like, rand_like
-# - shape, dtype, device는 같고 해당 값으로 초기화
-
+# ------------------------------------------------------------
+# 3) 크기/속성 따라하기: *_like 계열
+#    - shape/dtype/device를 그대로 따르고 값만 초기화
+# ------------------------------------------------------------
+print("\n[3] *_like 계열")
 origin = torch.tensor((2, 3), dtype=torch.float32, device="cpu")
-zlike = torch.zeros_like(origin)
-olike = torch.ones_like(origin)
-rlike = torch.rand_like(origin)
+zlike  = torch.zeros_like(origin)
+olike  = torch.ones_like(origin)
+rlike  = torch.rand_like(origin)
 rnlike = torch.randn_like(origin)
 
-print(f"zlike : {zlike}, dtype : {zlike.dtype}, shape: {zlike.shape}, device : {zlike.device}")
-print(f"zlike : {olike}, dtype : {olike.dtype}, shape: {olike.shape}, device : {olike.device}")
-print(f"zlike : {rlike}, dtype : {rlike.dtype}, shape: {rlike.shape}, device : {rlike.device}")
-print(f"zlike : {rnlike}, dtype : {rnlike.dtype}, shape: {rnlike.shape}, device : {rnlike.device}")
+print(f"zeros_like : {zlike},  dtype: {zlike.dtype},  shape: {zlike.shape}, device: {zlike.device}")
+print(f"ones_like  : {olike},  dtype: {olike.dtype},  shape: {olike.shape}, device: {olike.device}")
+print(f"rand_like  : {rlike},  dtype: {rlike.dtype},  shape: {rlike.shape}, device: {rlike.device}")
+print(f"randn_like : {rnlike}, dtype: {rnlike.dtype}, shape: {rnlike.shape}, device: {rnlike.device}")
 
-# 3) 인덱싱/슬라이싱/마스킹
-# 기본/슬라이스: x[0], x[:, 1:3]
-# 불리언 마스크: x[x > 0]
-# 고급 인덱싱: gather/scatter, 임베딩/룩업
-# 인덱스 dtype은 보통 int64(long)
+# ------------------------------------------------------------
+# 4) 인덱싱/슬라이싱/마스킹
+# ------------------------------------------------------------
+print("\n[4] 인덱싱/슬라이싱/마스킹")
+a = torch.arange(1, 13).reshape(3, 4)   # [[1..4],[5..8],[9..12]]
+print("a:\n", a)
+print("a[0]      :", a[0])       # 첫 행
+print("a[:, 1:3] :\n", a[:, 1:3])# 모든 행, 열 1~2
+mask = a % 2 == 0
+print("mask(짝수):\n", mask)
+print("a[mask]   :", a[mask])    # 불리언 인덱싱(벡터로 반환)
 
-# 4) 브로드캐스팅 규칙
-# 뒤에서부터 차원 맞춰 비교, 1 또는 동일 크기면 확장 가능
-# 예) (N,1) + (1,D) → (N,D)
-# expand vs repeat
-# expand: 메모리 복제 없이 뷰(읽기 위주)
-# repeat: 실제 복제(메모리 증가)
+# ------------------------------------------------------------
+# 5) 브로드캐스팅
+#    - 뒤에서부터 차원 비교, 1 또는 동일 크기이면 확장 가능
+#    - expand(뷰) vs repeat(복제)
+# ------------------------------------------------------------
+print("\n[5] 브로드캐스팅")
+b = torch.arange(3).reshape(3, 1)    # [3,1]
+c = torch.arange(4).reshape(1, 4)    # [1,4]
+bc = b + c                           # [3,4]
+print("b:\n", b)
+print("c:\n", c)
+print("b + c:\n", bc)
 
-# 5) 형태 변환(메모리 포함)
-# view / reshape: 원소 재배치 없이 보기 변경
-# view는 contiguous 필요, 아니면 x.contiguous().view(...)
-# permute / transpose: 차원 순서 바꿈(메모리 stride 변경)
-# squeeze / unsqueeze: 크기 1 차원 제거/추가
-# cat / stack: 결합(기존 축/새 축)
+# ------------------------------------------------------------
+# 6) 형태 변환(메모리 포함)
+#    - view/reshape: 원소 재배치 없이 모양만 변경 (view는 contiguous 필요)
+#    - permute/transpose: 차원 순서 변경( stride 변경 )
+#    - squeeze/unsqueeze: 크기 1 차원 제거/추가
+#    - cat/stack: 결합(기존 축/새 축)
+# ------------------------------------------------------------
+print("\n[6] 형태 변환")
+t = torch.arange(24).reshape(2, 3, 4)           # [2,3,4]
+print("t.shape:", t.shape)
+print("view to [6,4]:\n", t.view(6, 4))
+print("permute to [3,2,4]: shape", t.permute(1, 0, 2).shape)
+u = torch.randn(1, 3, 1, 5)
+print("u.shape:", u.shape, "-> squeeze:", u.squeeze().shape, "-> unsqueeze(0):", u.squeeze().unsqueeze(0).shape)
+a1 = torch.ones(2, 3)
+a2 = torch.zeros(2, 3)
+print("cat dim=0 shape:", torch.cat([a1, a2], dim=0).shape)  # [4,3]
+print("stack dim=0 shape:", torch.stack([a1, a2], dim=0).shape) # [2,2,3]
 
-# 6) 연산·축소(reduction)
-# 합/평균/최댓값 등: sum, mean, max, min
-# dim=으로 축 지정, keepdim=True로 차원 유지
-# 안정성: 로그·소프트맥스는 logsumexp, cross_entropy 등 안정화 버전 사용
+# ------------------------------------------------------------
+# 7) 연산·축소(reduction)
+#    - sum/mean/max/min, dim/keepdim 파라미터
+# ------------------------------------------------------------
+print("\n[7] 연산/축소")
+m = torch.arange(1, 7).reshape(2, 3)  # [[1,2,3],[4,5,6]]
+print("m:\n", m)
+print("sum all:", m.sum())
+print("mean dim=0:", m.mean(dim=0))
+print("max dim=1:", m.max(dim=1))
 
-# 7) dtype 규칙 & 프로모션
-# 기본: float32, int는 int64
-# 연산 시 암묵 승격: bool < int < float < complex
-# float16 + bfloat16 → float32, float32 + float64 → float64
-# 혼합정밀(AMP): with torch.autocast(..., dtype=torch.bfloat16|float16): ...
-# 보통 연산은 BF16/FP16, 가중치는 FP32(마스터 웨이트)
+# ------------------------------------------------------------
+# 8) dtype 규칙 & 프로모션
+#    - 기본 float32, 정수는 int64
+#    - 승격: bool < int < float < complex
+#    - FP16+BF16 → FP32, FP32+FP64 → FP64
+# ------------------------------------------------------------
+print("\n[8] dtype 프로모션")
+x16  = torch.tensor(1.0, dtype=torch.float16)
+xb16 = torch.tensor(2.0, dtype=torch.bfloat16)
+x32  = torch.tensor(3.0, dtype=torch.float32)
+x64  = torch.tensor(4.0, dtype=torch.float64)
+print("x16+xb16 dtype:", (x16 + xb16).dtype)  # → float32
+print("x16+x32  dtype:", (x16 + x32).dtype)   # → float32
+print("x32+x64  dtype:", (x32 + x64).dtype)   # → float64
 
-# 8) Autograd 핵심
-# requires_grad=True 파라미터는 leaf node(사용자 생성 텐서)
-# loss.backward() → w.grad에 누적
-# 다음 스텝 전 grad 초기화: optimizer.zero_grad() 또는 w.grad.zero_()
-# in-place 연산(접미사 _) 주의: 역전파에 필요한 저장 텐서를 덮어쓰면 에러/불안정
-# no_grad / detach
-# with torch.no_grad(): → 추론/업데이트 시 그래프 추적 중단
-# y = x.detach() → 같은 데이터 공유, 계산 그래프에서 분리
-# x.clone()은 데이터 복제(grad 경로 유지), x.detach().clone()은 둘 다
+# ------------------------------------------------------------
+# 9) Autograd 핵심
+#    - leaf tensor: 사용자가 직접 만든 requires_grad=True 텐서
+#    - loss.backward() → .grad에 누적
+#    - in-place 연산 주의(_ 접미사)
+#    - no_grad()/detach()로 그래프 추적 차단
+# ------------------------------------------------------------
+print("\n[9] Autograd")
+w = torch.randn(3, requires_grad=True)  # leaf
+y = (w ** 2).sum()
+y.backward()                            # dy/dw = 2w
+print("w.grad:", w.grad)
 
-# 9) 성능 & 메모리 팁
-# GPU 이동 일괄 처리: x = x.to(device, dtype=torch.float32)
-# 핀 메모리 DataLoader: pin_memory=True(CPU→GPU 전송 효율↑)
-# contiguous 필요 시 명시: x = x.contiguous()
-# 큰 텐서 조각 참조 vs 복제: 뷰(view/expand) 우선 고려
-# 정수·bool 텐서는 grad 불가 (손실/가중치는 float 계열)
+# 파라미터 업데이트 시에는 no_grad로 추적 중단
+lr = 0.1
+with torch.no_grad():
+    w -= lr * w.grad
+print("w updated (no_grad) OK, requires_grad:", w.requires_grad)
 
-# 10) 랜덤성 & 재현성
-# 시드: torch.manual_seed(0) (+ CUDA면 torch.cuda.manual_seed_all(0))
-# 완전 재현: 백엔드 설정 필요(CUDNN 등). 디버깅 때만 권장.
+# detach: 데이터 공유, 그래프 분리
+z = w.detach()
+print("detach shares storage:", z.data_ptr() == w.data_ptr())
 
-# 11) 도메인별 shape 관례
-# CV: NCHW (배치, 채널, 높이, 너비)
-# NLP: (batch, seq_len) 또는 (seq_len, batch) 프레임워크별 상이
-# 시계열: (batch, time, features)가 흔함
