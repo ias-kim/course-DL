@@ -44,7 +44,7 @@ test_loader = DataLoader(test_dataset, batch_size=1000, shuffle=False)
 # class MLP(nn.Module):
 #     def __init__(self):
 #         super().__init__()
-#         self.fc1 = nn.Linear(28*28, 128)  # 입력층 → 은닉층
+#         self.fc1 = nn.Linear(28*28, 128)  # 입력층 → 은닉층z
 #         self.fc2 = nn.Linear(128, 10)     # 은닉층 → 출력층 (10 클래스)
 
 #     def forward(self, x):
