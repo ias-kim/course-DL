@@ -1,13 +1,24 @@
 import torch
-from torch import nn, Tensor
+from torch import nn, Tensor, optim
 
+# computation Graph
 
-# x = torch.randint(1, 4, (1, 3), dtype=torch.float32)
-# print(x)
-# w = torch.randint(1, 13, (3, 4), dtype=torch.float32)
-# print(w)
-# y = x @ w
-# print(y)
+a = torch.tensor(2.0, requires_grad=True)
+b = torch.tensor(3.0, requires_grad=False)
+c = a ** 2 + b ** 2
+
+c.backward()
+
+print(f"a.gard: {a.grad}")
+print(f"b.gard: {b.grad}")
+print(c.grad)
+
+x = torch.randint(1, 4, (1, 3), dtype=torch.float32)
+print(x)
+w = torch.randint(1, 13, (3, 4), dtype=torch.float32)
+print(w)
+y = x @ w
+print(y)
 
 
 # Layer -> Forward 
@@ -49,10 +60,35 @@ class XorModel(nn.Module):
             x = self.fc2(x)
             x = self.af(x)
             return x
+        
+raw_feature:Tensor = Tensor([0, 0], [0, 1], [1, 0], [1, 1])
+raw_label:Tensor = Tensor([0, 1, 1, 0]).reshape(-1, 1) # 차원을 맞추기 위한 reshape
 
-obj = MyLayer(2, 2)
-a = XorModel(obj)
+model:XorModel = XorModel()
+loss_fn:nn.MSELoss = nn.MSELoss()
+optimizer:optim.SGD = optim.SGD(model.parameters(), lr=0.01) # optimizer와 model을 연결
 
-for str, param in obj.named_parameters():
-    print(f"name: {str}, paramse: {param}")
+# neural network로 구성
+for epoch in range(1000):
+    # 활성화 함수, 기울기 값 계산을 위한 back pragation 
+    pred:Tensor = model(raw_feature) # call
+    loss:Tensor = loss_fn(pred, raw_label)
+
+    optimizer.zero_grad()
+
+    loss.backward()
+
+    optimizer.step() # 지정된 step 알고리즘에 따라서 업데이트! 
+
+# --------여기까지 Forward 과정 ------------
+
+# --------지금부터 Back 과정 ---------------
+
+
+
+# # obj = MyLayer(2, 2)
+# # a = XorModel(obj)
+
+# # for str, param in obj.named_parameters():
+# #     print(f"name: {str}, paramse: {param}")
 
