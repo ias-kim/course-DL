@@ -11,7 +11,7 @@ class MLR(nn.Module):
 
     def pre_hooks(module, input):
         print(f"invoked pre-hook: {type(module)}, input: {input}")
- plmk5
+
     def forward(self, x: Tensor) -> Tensor:
         # H(x1, x2, x3) = W1*X1+W2*X2+W3*X3 + b
         return x @ self.weights + self.bias
