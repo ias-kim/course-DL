@@ -16,7 +16,8 @@ from torchvision import datasets, transforms
 
 # print(x, f"type: {y}")
 
-
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device('cpu') # mac -> meta
 transform = transforms.Compose([
   transforms.ToTensor()
 ])  
@@ -56,7 +57,7 @@ model:nn.Sequential = nn.Sequential(
   nn.ReLU(),
   nn.Linear(120, 10),
   # 마지막 Linear 뒤엔 CrossEntropyLoss가 내부적으로 Softmax를 적용하므로 activation(ReLU)을 넣지 않는다.
-)
+).to(device) # 모델이 생성할 때에 파라미터 값을 GPU에 올림.
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
@@ -68,6 +69,12 @@ epoch = 15
 for epoch in range(1, epoch + 1):
     epoch_loss = 0.0
     for X, y in train_dataloader:
+        X: Tensor
+        y: Tensor
+
+        x = X.to(device)
+        y = y.to(device)
+
         ## Forward propagation
         logits:Tensor = model(X)
         loss:Tensor = criterion(logits, y) # y값의 범위 0 ~ 11 인덱스, 레이블의 범위가 반드시 일치해야함.
@@ -93,13 +100,13 @@ with torch.no_grad():
     correct = 0
     for images, target in test_dataloader:
         print(images.size())
-        ### forward
+        ## forward
         legits = model(images)
         
-        pred = torch.argmax(logits, dim=1)
+        pred = torch.argmax(logits, dim=1) # 가장 큰 값을 찾아서 몇번째 인덱스인지 확인 (0 -> 첫번재 행 기준, 1 -> 첫번째 열 기준)
 
         ## comparison
-        correct += (pred == target).sum().item()
+        correct += (pred == target).sum().item() # 그 텐서 값에서 본연의 자료형(스칼라)로 변형
 
         exit(0)
 
@@ -108,5 +115,5 @@ with torch.no_grad():
         print(pred[0]) # -> Vector의 요소가 10개
 
     
-    print(f"")
+    print(f"correct answer ratio: {correct/len(test_dataset):.4f}")
 
