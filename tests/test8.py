@@ -4,7 +4,6 @@ import torch
 from torch import nn, optim, Tensor
 from torch.utils import data
 from torchvision import datasets, transforms
-
 # x = torch.tensor(2.0, requires_grad=True)
 # y = x ** 2
 # z = y ** 3
@@ -65,15 +64,15 @@ optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 ##################################################
 # - 학습 (에폭, 배치)
 ##################################################
-epoch = 15
+epoch = 10
 for epoch in range(1, epoch + 1):
     epoch_loss = 0.0
     for X, y in train_dataloader:
         X: Tensor
         y: Tensor
 
-        x = X.to(device)
-        y = y.to(device)
+        x = X.to(device) # Feature/samples -> Memory in GPU
+        y = y.to(device) # Label/samples -> Memory in GPU
 
         ## Forward propagation
         logits:Tensor = model(X)
@@ -90,7 +89,10 @@ for epoch in range(1, epoch + 1):
         
         
     print(f"{epoch}th epoch: loss:{epoch_loss/len(train_dataset)}")
-    
+
+
+# torch.save()
+torch.save(model, "models/model_full.pth")
 
 # #########################################
 # #### 평가(test) #################################
@@ -99,6 +101,8 @@ for epoch in range(1, epoch + 1):
 with torch.no_grad():
     correct = 0
     for images, target in test_dataloader:
+        images = images.to(device)
+        target = target.to(device)
         print(images.size())
         ## forward
         legits = model(images)
