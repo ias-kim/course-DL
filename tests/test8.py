@@ -94,6 +94,17 @@ for epoch in range(1, epoch + 1):
 # torch.save()
 torch.save(model, "models/model_full.pth")
 
+# state_dic
+checkpoints = {
+    "model_state": model.state_dict(), # 상태값 파라미터 값들을 저장.
+    "optimizer": optimizer.state_dict(),
+    "epoch": epoch,
+    "epoch_loss": epoch_loss,
+}
+
+torch.save(checkpoints, f"models/model_state_{epoch}.pth") # 매 에폭마다 달리하여 저장
+
+
 # #########################################
 # #### 평가(test) #################################
 # 우항에 있는 매직메서드를 찾는다. 구문이 다 실행시 exit라는 구문을 실행함.
