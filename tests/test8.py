@@ -132,3 +132,17 @@ with torch.no_grad():
     
     print(f"correct answer ratio: {correct/len(test_dataset):.4f}")
 
+img: Tensor
+img, _ = test_dataset[0]
+
+img = img.unsqueeze(0)
+
+torch.onnx.export(
+    model,
+    img,
+    "models/mymodel.onnx",
+    input_names=["inputs"],
+    output_names=["logits"],
+    opset_version=11,
+    do_constanc_folding=True
+)
